@@ -452,6 +452,8 @@ public class Helper {
      * http://stackoverflow.com/q/2972986/194609 and use only if you know what you are doing.
      */
     public static void cleanHack() {
+    	if ("true".equals(System.getProperty("com.graphhopper.disableCleanhack")))
+    		return;
         System.gc();
     }
 
