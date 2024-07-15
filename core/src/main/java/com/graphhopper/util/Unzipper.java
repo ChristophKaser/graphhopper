@@ -18,6 +18,7 @@
 package com.graphhopper.util;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -48,6 +49,7 @@ public class Unzipper {
     public void unzip(InputStream fromIs, File toFolder, ProgressListener progressListener) throws IOException {
         if (!toFolder.exists())
             toFolder.mkdirs();
+        String toFolderPath = toFolder.getCanonicalPath();
 
         long sumBytes = 0;
         ZipInputStream zis = new ZipInputStream(fromIs);
@@ -55,14 +57,17 @@ public class Unzipper {
             ZipEntry ze = zis.getNextEntry();
             byte[] buffer = new byte[8 * 1024];
             while (ze != null) {
+                File newFile = new File(toFolder, ze.getName());
+                if (!newFile.getCanonicalPath().startsWith(toFolderPath)) {
+                    throw new IOException("Illegal zip entry '" + ze.getName() + "'");
+                }
                 if (ze.isDirectory()) {
-                    new File(toFolder, ze.getName()).mkdir();
+                    newFile.mkdir();
                 } else {
                     double factor = 1;
                     if (ze.getCompressedSize() > 0 && ze.getSize() > 0)
                         factor = (double) ze.getCompressedSize() / ze.getSize();
 
-                    File newFile = new File(toFolder, ze.getName());
                     FileOutputStream fos = new FileOutputStream(newFile);
                     try {
                         int len;
